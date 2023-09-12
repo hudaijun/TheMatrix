@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ithe code world</title>
+    <style rel="">
+        * {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" style="background:black"></canvas>
+    <script type="text/javascript">
+
+        const canvas = document.getElementById("canvas");
+        const context = canvas.getContext("2d");
+
+        let width, height, colunms = 0;
+        let drops = [];
+        const fontSize = 16;
+        const str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        const resize = () => {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            let newColumns = Math.floor(width / fontSize);
+            if (colunms >= newColumns) {
+                drops.length = newColumns
+            }
+            else {
+                for (let i = colunms; i < newColumns; i++) {
+                    drops.push(Math.ceil(-Math.random() * Math.floor(height / fontSize)));
+                }
+            }
+            colunms = newColumns
+        }
+        resize();
+
+        new ResizeObserver(resize).observe(document.body)
+
+        let date = Date.now();
+        const draw = () => {
+
+            if (Date.now() - date <= 50) {
+                requestAnimationFrame(draw)
+                return
+            }
+
+            date = Date.now()
+
+            context.fillStyle = "rgba(0,0,0,0.15)";
+            context.fillRect(0, 0, width, height);
+            context.font = fontSize + 'px Consolas';
+            context.fillStyle = "#00FF00";
+            for (let i = 0; i < colunms; i++) {
+                const index = Math.floor(Math.random() * str.length);
+                const x = i * fontSize;
+                const y = drops[i] * fontSize;
+                context.fillText(str[index], x, y);
+                if (y >= canvas.height && Math.random() > 0.93) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+            requestAnimationFrame(draw)
+        };
+
+        requestAnimationFrame(draw)
+
+    </script>
+</body>
+
+</html>
