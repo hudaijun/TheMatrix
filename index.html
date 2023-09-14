@@ -14,19 +14,27 @@
             width: 100%;
         }
     </style>
+    <script src="lodash.js"></script>
 </head>
 
 <body>
     <canvas id="canvas" style="background:black"></canvas>
     <script type="text/javascript">
 
+        const opt = {
+            //下落速度：[最小值，最大值]
+            speed: [10, 50],
+            //值越小，越长
+            tailLength: 0.05,
+            fontSize: 24,
+            characters: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZあいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれ"
+        }
+
         const canvas = document.getElementById("canvas");
         const context = canvas.getContext("2d");
 
         let width, height, colunms = 0;
-        let drops = [];
-        const fontSize = 16;
-        const str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let drops = [], speed = [];
 
         const resize = () => {
             width = window.innerWidth;
@@ -34,13 +42,14 @@
             canvas.width = width;
             canvas.height = height;
 
-            let newColumns = Math.floor(width / fontSize);
+            let newColumns = Math.floor(width / opt.fontSize);
             if (colunms >= newColumns) {
                 drops.length = newColumns
             }
             else {
                 for (let i = colunms; i < newColumns; i++) {
-                    drops.push(Math.ceil(-Math.random() * Math.floor(height / fontSize)));
+                    drops.push(Math.ceil(-Math.random() * Math.floor(height / opt.fontSize)));
+                    speed.push([Date.now(), Math.random() * opt.speed[1] + opt.speed[0]])
                 }
             }
             colunms = newColumns
@@ -49,35 +58,34 @@
 
         new ResizeObserver(resize).observe(document.body)
 
-        let date = Date.now();
-        const draw = () => {
-
-            if (Date.now() - date <= 50) {
-                requestAnimationFrame(draw)
-                return
-            }
-
-            date = Date.now()
-
-            context.fillStyle = "rgba(0,0,0,0.15)";
+        const draw = _.throttle(() => {
+            context.fillStyle = `rgba(0,0,0,${opt.tailLength})`;
             context.fillRect(0, 0, width, height);
-            context.font = fontSize + 'px Consolas';
+            context.font = opt.fontSize + 'px Consolas';
             context.fillStyle = "#00FF00";
+            context.textAlign = "center";
+
             for (let i = 0; i < colunms; i++) {
-                const index = Math.floor(Math.random() * str.length);
-                const x = i * fontSize;
-                const y = drops[i] * fontSize;
-                context.fillText(str[index], x, y);
+
+                if (Date.now() - speed[i][0] <= speed[i][1]) {
+                    continue
+                }
+
+                const index = Math.floor(Math.random() * opt.characters.length);
+                const x = i * opt.fontSize;
+                const y = drops[i] * opt.fontSize;
+                context.fillText(opt.characters[index], x, y);
                 if (y >= canvas.height && Math.random() > 0.93) {
                     drops[i] = 0;
+                    speed[i] = [Date.now(), Math.random() * opt.speed[1] + opt.speed[0]]
                 }
                 drops[i]++;
+                speed[i][0] = Date.now()
             }
             requestAnimationFrame(draw)
-        };
+        }, 1000 / 60);
 
         requestAnimationFrame(draw)
-
     </script>
 </body>
 
